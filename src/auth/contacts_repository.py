@@ -48,6 +48,14 @@ class ContactsRepository:
 
         return contact.scalar_one_or_none()
 
+    async def get_contact_by_reset_password_token(
+        self, password_reset_token: str
+    ) -> Contact | None:
+        stmt = select(Contact).filter_by(password_reset_token=password_reset_token)
+        contact = await self.db.execute(stmt)
+
+        return contact.scalar_one_or_none()
+
     async def get_contact_by_verification_token(
         self, verification_token: str
     ) -> Contact | None:
@@ -142,5 +150,32 @@ class ContactsRepository:
 
         contact.avatar = avatar_url
         await self.db.commit()
+
+        return contact
+
+    async def set_password_token(self, email):
+        contact = await self.get_contact_by_email(email)
+
+        if not contact:
+            return None
+
+        contact.password_reset_token = str(uuid.uuid4())
+
+        await self.db.commit()
+        await self.db.refresh(contact)
+
+        return contact
+
+    async def set_password(self, password_reset_token: str, password: str):
+        contact = await self.get_contact_by_reset_password_token(password_reset_token)
+
+        if not contact:
+            return None
+
+        contact.password = password
+        contact.password_reset_token = None
+
+        await self.db.commit()
+        await self.db.refresh(contact)
 
         return contact

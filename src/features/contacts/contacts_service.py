@@ -85,3 +85,22 @@ class ContactsService:
         await self.contacts_repository.update_avatar_url(contact_id, avatar_url)
 
         return await self.contacts_repository.get_contact_by_id(contact_id)
+
+    async def reset_password(self, email):
+        contact = await self.contacts_repository.set_password_token(email)
+
+        if not contact:
+            return None
+
+        await send_email(
+            contact.email,
+            "Reset password",
+            "reset_password.html",
+            {
+                "token": contact.password_reset_token,
+                "host": settings.HOST,
+                "first_name": contact.first_name,
+            },
+        )
+
+        return contact

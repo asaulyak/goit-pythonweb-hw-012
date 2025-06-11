@@ -68,6 +68,15 @@ async def me(
     return contact
 
 
+@router.post("/reset-password/{email}", status_code=204)
+@limiter.limit("1/minute")
+async def reset_password(
+    request: Request, email: str, db: AsyncSession = Depends(get_db)
+):
+    contacts_service = ContactsService(db)
+    await contacts_service.reset_password(email)
+
+
 @router.get("/{contact_id}", response_model=ContactResponseModel)
 async def get_contact(contact_id: int, db: AsyncSession = Depends(get_db)):
     contacts_service = ContactsService(db)

@@ -48,3 +48,9 @@ class AuthService:
             )
 
         await self.contacts_repository.verify_email(contact.email)
+
+    async def set_password(self, password_reset_token: str, password: str):
+        hash = Hash()
+        await self.contacts_repository.set_password(
+            password_reset_token, hash.get_password_hash(password)
+        )

@@ -5,6 +5,7 @@ from src.database import get_db
 from src.features.auth.auth_service import AuthService
 from src.features.auth.schema.login_response_schema import LoginResponseModel
 from src.features.auth.schema.login_schema import LoginModel
+from src.features.auth.schema.password_set_schema import PasswordSetModel
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -23,3 +24,14 @@ async def login(verification_token: str, db: AsyncSession = Depends(get_db)):
     await auth_service.verify_email(verification_token)
 
     return "Verified"
+
+
+@router.post("/set-password/{password_reset_token}", status_code=204)
+async def set_password(
+    body: PasswordSetModel,
+    password_reset_token: str,
+    db: AsyncSession = Depends(get_db),
+):
+    auth_service = AuthService(db)
+
+    await auth_service.set_password(password_reset_token, body.password)
