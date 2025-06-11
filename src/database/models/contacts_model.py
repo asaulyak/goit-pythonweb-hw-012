@@ -30,3 +30,19 @@ class Contact(Base):
         server_default=func.now(),
         onupdate=func.now(),
     )
+
+    def to_dict(self):
+        """
+        Converts the object's properties to a dictionary.
+        This is the key method for making the object serializable.
+        """
+        return {
+            "id": self.id,
+            "first_name": self.first_name,
+            "last_name": self.last_name,
+            "email": self.email,
+            "phone": self.phone,
+            "birth_day": str(self.birth_day),
+            "data": self.data,
+            "avatar": self.avatar,
+        }

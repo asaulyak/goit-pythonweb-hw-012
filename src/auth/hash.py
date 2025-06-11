@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timedelta, UTC
 from typing import Optional
 
@@ -8,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from jose import JWTError, jwt
 
 from src.auth.users_service import UserService
+from src.cache.cache_service import redis_client, DEFAULT_CACHE_TTL
 from src.config import settings
 from src.database.db import get_db
 
@@ -57,8 +59,18 @@ async def get_current_user(
             raise credentials_exception
     except JWTError as e:
         raise credentials_exception
+
+    user_cache_key = f"current_user_{username}"
+    cached_user = redis_client.get(user_cache_key)
+
+    if cached_user:
+        return json.loads(cached_user)
+
     user_service = UserService(db)
     user = await user_service.get_user_by_username(username)
+
     if user is None:
         raise credentials_exception
+
+    redis_client.set(user_cache_key, json.dumps(user.to_dict()), DEFAULT_CACHE_TTL)
     return user
