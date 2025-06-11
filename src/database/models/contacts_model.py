@@ -1,8 +1,15 @@
+from enum import Enum
+
 from sqlalchemy import Integer, String, DateTime, func, Date
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.database.db import Base
+
+
+class UserRole(str, Enum):
+    USER = "user"
+    ADMIN = "admin"
 
 
 class Contact(Base):
@@ -13,6 +20,9 @@ class Contact(Base):
     last_name: Mapped[str] = mapped_column(String(50))
     email: Mapped[str] = mapped_column(String(120), unique=True)
     phone: Mapped[str] = mapped_column(String(12))
+    role: Mapped[UserRole] = mapped_column(
+        String(50), default=UserRole.USER, server_default=UserRole.USER
+    )
     birth_day: Mapped[DateTime] = mapped_column(
         Date(), nullable=False, server_default=func.now()
     )
@@ -42,6 +52,7 @@ class Contact(Base):
             "last_name": self.last_name,
             "email": self.email,
             "phone": self.phone,
+            "role": self.role,
             "birth_day": str(self.birth_day),
             "data": self.data,
             "avatar": self.avatar,

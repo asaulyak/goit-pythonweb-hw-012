@@ -12,6 +12,7 @@ from src.auth.users_service import UserService
 from src.cache.cache_service import redis_client, DEFAULT_CACHE_TTL
 from src.config import settings
 from src.database.db import get_db
+from src.database.models.contacts_model import Contact, UserRole
 
 
 class Hash:
@@ -25,6 +26,12 @@ class Hash:
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+
+credentials_exception = HTTPException(
+    status_code=status.HTTP_401_UNAUTHORIZED,
+    detail="Could not validate credentials",
+    headers={"WWW-Authenticate": "Bearer"},
+)
 
 
 async def create_access_token(data: dict, expires_delta: Optional[int] = None):
@@ -40,14 +47,7 @@ async def create_access_token(data: dict, expires_delta: Optional[int] = None):
     return encoded_jwt
 
 
-async def get_current_user(
-    token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
-):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+def decode_jwt(token: str):
 
     try:
         # Decode JWT
@@ -60,17 +60,41 @@ async def get_current_user(
     except JWTError as e:
         raise credentials_exception
 
+    return username
+
+
+async def get_current_user(
+    token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
+):
+    username = decode_jwt(token)
+
+    user_service = UserService(db)
+    user = await user_service.get_user_by_username(username)
+    if user is None:
+        raise credentials_exception
+    return user
+
+
+async def get_current_cached_user(
+    token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
+):
+    username = decode_jwt(token)
     user_cache_key = f"current_user_{username}"
     cached_user = redis_client.get(user_cache_key)
 
     if cached_user:
         return json.loads(cached_user)
 
-    user_service = UserService(db)
-    user = await user_service.get_user_by_username(username)
+    user = await get_current_user(token, db)
 
     if user is None:
         raise credentials_exception
 
     redis_client.set(user_cache_key, json.dumps(user.to_dict()), DEFAULT_CACHE_TTL)
     return user
+
+
+def get_current_admin_user(current_user: Contact = Depends(get_current_user)):
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403)
+    return current_user

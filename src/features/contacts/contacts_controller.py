@@ -5,7 +5,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-from src.auth.hash import get_current_user
+from src.auth.hash import (
+    get_current_user,
+    get_current_admin_user,
+    get_current_cached_user,
+)
 from src.cloudinary.upload_file_service import UploadFileService
 from src.database import get_db
 from src.features.contacts.contacts_service import ContactsService
@@ -58,7 +62,9 @@ async def create_contact(body: ContactCreateModel, db: AsyncSession = Depends(ge
 
 @router.get("/me", response_model=ContactModel)
 @limiter.limit("10/minute")
-async def me(request: Request, contact: ContactModel = Depends(get_current_user)):
+async def me(
+    request: Request, contact: ContactModel = Depends(get_current_cached_user)
+):
     return contact
 
 
@@ -71,7 +77,7 @@ async def get_contact(contact_id: int, db: AsyncSession = Depends(get_db)):
 @router.patch("/avatar", response_model=ContactResponseModel)
 async def update_avatar_user(
     file: UploadFile = File(),
-    contact: ContactModel = Depends(get_current_user),
+    contact: ContactModel = Depends(get_current_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
     avatar_url = UploadFileService().upload_file(file, contact.id)
