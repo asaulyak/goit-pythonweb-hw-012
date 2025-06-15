@@ -1,3 +1,9 @@
+"""
+Main application module for the FastAPI web application.
+This module sets up the FastAPI application, configures CORS middleware,
+and includes all the necessary routers for the API endpoints.
+"""
+
 from fastapi import FastAPI
 from slowapi.errors import RateLimitExceeded
 from starlette.responses import JSONResponse
@@ -23,6 +29,16 @@ app.add_middleware(
 
 @app.exception_handler(RateLimitExceeded)
 async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    """
+    Handle rate limit exceeded exceptions.
+    
+    Args:
+        request (Request): The incoming request
+        exc (RateLimitExceeded): The rate limit exception
+        
+    Returns:
+        JSONResponse: A 429 status code response with an error message
+    """
     return JSONResponse(
         status_code=429,
         content={"error": "rate limit exceeded. Try again later"},

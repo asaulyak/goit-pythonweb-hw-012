@@ -1,3 +1,9 @@
+"""
+Contacts controller module.
+This module defines the FastAPI routes for contact management operations
+including CRUD operations, search, and avatar management.
+"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, status, HTTPException, Request, UploadFile, File
@@ -26,6 +32,17 @@ limiter = Limiter(key_func=get_remote_address)
 async def get_contacts(
     skip: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)
 ):
+    """
+    Get a paginated list of contacts.
+    
+    Args:
+        skip (int): Number of records to skip
+        limit (int): Maximum number of records to return
+        db (AsyncSession): Database session
+        
+    Returns:
+        list[ContactResponseModel]: List of contacts
+    """
     contacts_service = ContactsService(db)
     contacts = await contacts_service.get_contacts(skip, limit)
 
@@ -39,6 +56,18 @@ async def search(
     email: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
 ):
+    """
+    Search contacts by name or email.
+    
+    Args:
+        first_name (Optional[str]): First name to search for
+        last_name (Optional[str]): Last name to search for
+        email (Optional[str]): Email to search for
+        db (AsyncSession): Database session
+        
+    Returns:
+        list[ContactResponseModel]: List of matching contacts
+    """
     contacts_service = ContactsService(db)
 
     return await contacts_service.search(first_name, last_name, email)
@@ -46,6 +75,15 @@ async def search(
 
 @router.get("/soon_celebrate", response_model=list[ContactResponseModel])
 async def search(db: AsyncSession = Depends(get_db)):
+    """
+    Get contacts with upcoming birthdays.
+    
+    Args:
+        db (AsyncSession): Database session
+        
+    Returns:
+        list[ContactResponseModel]: List of contacts with upcoming birthdays
+    """
     contacts_service = ContactsService(db)
 
     return await contacts_service.soon_celebrate()
@@ -55,6 +93,19 @@ async def search(db: AsyncSession = Depends(get_db)):
     "/signup", response_model=ContactResponseModel, status_code=status.HTTP_201_CREATED
 )
 async def create_contact(body: ContactCreateModel, db: AsyncSession = Depends(get_db)):
+    """
+    Create a new contact.
+    
+    Args:
+        body (ContactCreateModel): Contact data
+        db (AsyncSession): Database session
+        
+    Returns:
+        ContactResponseModel: Created contact
+        
+    Raises:
+        HTTPException: If contact creation fails
+    """
     contacts_service = ContactsService(db)
 
     return await contacts_service.create_contact(body)
@@ -65,6 +116,16 @@ async def create_contact(body: ContactCreateModel, db: AsyncSession = Depends(ge
 async def me(
     request: Request, contact: ContactModel = Depends(get_current_cached_user)
 ):
+    """
+    Get current user's contact information.
+    
+    Args:
+        request (Request): FastAPI request object
+        contact (ContactModel): Current authenticated user
+        
+    Returns:
+        ContactModel: Current user's contact information
+    """
     return contact
 
 
@@ -73,12 +134,36 @@ async def me(
 async def reset_password(
     request: Request, email: str, db: AsyncSession = Depends(get_db)
 ):
+    """
+    Request a password reset for a contact.
+    
+    Args:
+        request (Request): FastAPI request object
+        email (str): Contact's email address
+        db (AsyncSession): Database session
+        
+    Raises:
+        HTTPException: If password reset request fails
+    """
     contacts_service = ContactsService(db)
     await contacts_service.reset_password(email)
 
 
 @router.get("/{contact_id}", response_model=ContactResponseModel)
 async def get_contact(contact_id: int, db: AsyncSession = Depends(get_db)):
+    """
+    Get a specific contact by ID.
+    
+    Args:
+        contact_id (int): Contact ID
+        db (AsyncSession): Database session
+        
+    Returns:
+        ContactResponseModel: Contact information
+        
+    Raises:
+        HTTPException: If contact is not found
+    """
     contacts_service = ContactsService(db)
     return await contacts_service.get_contact_by_id(contact_id)
 
@@ -89,6 +174,20 @@ async def update_avatar_user(
     contact: ContactModel = Depends(get_current_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
+    """
+    Update a contact's avatar.
+    
+    Args:
+        file (UploadFile): Avatar image file
+        contact (ContactModel): Current authenticated user
+        db (AsyncSession): Database session
+        
+    Returns:
+        ContactResponseModel: Updated contact information
+        
+    Raises:
+        HTTPException: If avatar update fails
+    """
     avatar_url = UploadFileService().upload_file(file, contact.id)
 
     contacts_service = ContactsService(db)
@@ -106,6 +205,21 @@ async def create_contact(
     contact: ContactModel = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    """
+    Update a contact's information.
+    
+    Args:
+        contact_id (int): Contact ID to update
+        body (ContactUpdateModel): Updated contact data
+        contact (ContactModel): Current authenticated user
+        db (AsyncSession): Database session
+        
+    Returns:
+        ContactResponseModel: Updated contact information
+        
+    Raises:
+        HTTPException: If update fails or user is not authorized
+    """
     if contact.id != contact_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
@@ -120,6 +234,17 @@ async def delete_contact(
     contact: ContactModel = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    """
+    Delete a contact.
+    
+    Args:
+        contact_id (int): Contact ID to delete
+        contact (ContactModel): Current authenticated user
+        db (AsyncSession): Database session
+        
+    Raises:
+        HTTPException: If deletion fails or user is not authorized
+    """
     if contact.id != contact_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
