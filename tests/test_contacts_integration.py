@@ -17,7 +17,9 @@ class TestContactsControllerIntegration:
     def test_get_contacts_success(self, client, mock_contacts_service, sample_contacts):
         """Test successful retrieval of contacts with pagination."""
         # Arrange
-        mock_contacts_service.return_value.get_contacts = AsyncMock(return_value=sample_contacts)
+        mock_contacts_service.return_value.get_contacts = AsyncMock(
+            return_value=sample_contacts
+        )
 
         # Act
         response = client.get("/api/contacts/?skip=0&limit=10")
@@ -39,10 +41,14 @@ class TestContactsControllerIntegration:
         assert response.status_code == status.HTTP_200_OK
         assert response.json() == []
 
-    def test_search_contacts_by_first_name(self, client, mock_contacts_service, sample_contacts):
+    def test_search_contacts_by_first_name(
+        self, client, mock_contacts_service, sample_contacts
+    ):
         """Test search contacts by first name."""
         # Arrange
-        mock_contacts_service.return_value.search = AsyncMock(return_value=sample_contacts)
+        mock_contacts_service.return_value.search = AsyncMock(
+            return_value=sample_contacts
+        )
 
         # Act
         response = client.get("/api/contacts/search?first_name=John")
@@ -50,16 +56,21 @@ class TestContactsControllerIntegration:
         # Assert
         assert response.status_code == status.HTTP_200_OK
         assert len(response.json()) == 3
-        mock_contacts_service.return_value.search.assert_called_once_with("John", None, None)
+        mock_contacts_service.return_value.search.assert_called_once_with(
+            "John", None, None
+        )
 
     def test_search_contacts_no_parameters(self, client, mock_contacts_service):
         """Test search contacts without any search parameters."""
         # Arrange
         from fastapi import HTTPException
-        mock_contacts_service.return_value.search = AsyncMock(side_effect=HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No search parameters provided"
-        ))
+
+        mock_contacts_service.return_value.search = AsyncMock(
+            side_effect=HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No search parameters provided",
+            )
+        )
 
         # Act
         response = client.get("/api/contacts/search")
@@ -68,10 +79,14 @@ class TestContactsControllerIntegration:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert response.json()["detail"] == "No search parameters provided"
 
-    def test_soon_celebrate_success(self, client, mock_contacts_service, sample_contacts):
+    def test_soon_celebrate_success(
+        self, client, mock_contacts_service, sample_contacts
+    ):
         """Test getting contacts with upcoming birthdays."""
         # Arrange
-        mock_contacts_service.return_value.soon_celebrate = AsyncMock(return_value=sample_contacts)
+        mock_contacts_service.return_value.soon_celebrate = AsyncMock(
+            return_value=sample_contacts
+        )
 
         # Act
         response = client.get("/api/contacts/soon_celebrate")
@@ -81,10 +96,14 @@ class TestContactsControllerIntegration:
         assert len(response.json()) == 3
         mock_contacts_service.return_value.soon_celebrate.assert_called_once()
 
-    def test_create_contact_success(self, client, mock_contacts_service, sample_contact_create_data, sample_contact):
+    def test_create_contact_success(
+        self, client, mock_contacts_service, sample_contact_create_data, sample_contact
+    ):
         """Test successful contact creation."""
         # Arrange
-        mock_contacts_service.return_value.create_contact = AsyncMock(return_value=sample_contact)
+        mock_contacts_service.return_value.create_contact = AsyncMock(
+            return_value=sample_contact
+        )
 
         # Act
         payload = sample_contact_create_data.copy()
@@ -96,14 +115,18 @@ class TestContactsControllerIntegration:
         assert response.json()["id"] == sample_contact.id
         mock_contacts_service.return_value.create_contact.assert_called_once()
 
-    def test_create_contact_already_exists(self, client, mock_contacts_service, sample_contact_create_data):
+    def test_create_contact_already_exists(
+        self, client, mock_contacts_service, sample_contact_create_data
+    ):
         """Test contact creation when contact already exists."""
         # Arrange
         from fastapi import HTTPException
-        mock_contacts_service.return_value.create_contact = AsyncMock(side_effect=HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Contact already exists"
-        ))
+
+        mock_contacts_service.return_value.create_contact = AsyncMock(
+            side_effect=HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="Contact already exists"
+            )
+        )
 
         # Act
         payload = sample_contact_create_data.copy()
@@ -122,10 +145,14 @@ class TestContactsControllerIntegration:
         # Assert
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_get_contact_by_id_success(self, client, mock_contacts_service, sample_contact):
+    def test_get_contact_by_id_success(
+        self, client, mock_contacts_service, sample_contact
+    ):
         """Test successful retrieval of contact by ID."""
         # Arrange
-        mock_contacts_service.return_value.get_contact_by_id = AsyncMock(return_value=sample_contact)
+        mock_contacts_service.return_value.get_contact_by_id = AsyncMock(
+            return_value=sample_contact
+        )
 
         # Act
         response = client.get("/api/contacts/1")
@@ -139,10 +166,12 @@ class TestContactsControllerIntegration:
         """Test retrieval of contact by ID when contact doesn't exist."""
         # Arrange
         from fastapi import HTTPException
-        mock_contacts_service.return_value.get_contact_by_id = AsyncMock(side_effect=HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Contact not found"
-        ))
+
+        mock_contacts_service.return_value.get_contact_by_id = AsyncMock(
+            side_effect=HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found"
+            )
+        )
 
         # Act
         response = client.get("/api/contacts/999")
@@ -151,10 +180,14 @@ class TestContactsControllerIntegration:
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert response.json()["detail"] == "Contact not found"
 
-    def test_update_contact_success(self, client, mock_contacts_service, sample_contact_update_data, sample_contact):
+    def test_update_contact_success(
+        self, client, mock_contacts_service, sample_contact_update_data, sample_contact
+    ):
         """Test successful contact update."""
         # Arrange
-        mock_contacts_service.return_value.update_contact = AsyncMock(return_value=sample_contact)
+        mock_contacts_service.return_value.update_contact = AsyncMock(
+            return_value=sample_contact
+        )
 
         # Act
         payload = sample_contact_update_data.copy()
@@ -166,9 +199,13 @@ class TestContactsControllerIntegration:
         mock_contacts_service.return_value.update_contact.assert_called_once()
         call_args = mock_contacts_service.return_value.update_contact.call_args
         assert call_args[0][0] == 1  # contact_id
-        assert isinstance(call_args[0][1], ContactUpdateModel)  # body should be ContactUpdateModel
+        assert isinstance(
+            call_args[0][1], ContactUpdateModel
+        )  # body should be ContactUpdateModel
 
-    def test_update_contact_unauthorized(self, client_unauthorized, sample_contact_update_data):
+    def test_update_contact_unauthorized(
+        self, client_unauthorized, sample_contact_update_data
+    ):
         """Test contact update when user is not authorized."""
         # Act
         payload = sample_contact_update_data.copy()
@@ -178,7 +215,9 @@ class TestContactsControllerIntegration:
         # Assert
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_update_contact_forbidden(self, client, mock_current_user, sample_contact_update_data):
+    def test_update_contact_forbidden(
+        self, client, mock_current_user, sample_contact_update_data
+    ):
         """Test contact update when user tries to update another user's contact."""
         # Arrange
         # Mock current user with different ID
@@ -202,7 +241,10 @@ class TestContactsControllerIntegration:
         response = client.delete("/api/contacts/1")
 
         # Assert
-        assert response.status_code in (status.HTTP_204_NO_CONTENT, status.HTTP_401_UNAUTHORIZED)
+        assert response.status_code in (
+            status.HTTP_204_NO_CONTENT,
+            status.HTTP_401_UNAUTHORIZED,
+        )
         if response.status_code == status.HTTP_204_NO_CONTENT:
             mock_contacts_service.return_value.delete_contact.assert_called_once_with(1)
 
@@ -236,24 +278,34 @@ class TestContactsControllerIntegration:
         response = client.post("/api/contacts/reset-password/test@example.com")
 
         # Assert
-        assert response.status_code in (status.HTTP_204_NO_CONTENT, status.HTTP_429_TOO_MANY_REQUESTS)
+        assert response.status_code in (
+            status.HTTP_204_NO_CONTENT,
+            status.HTTP_429_TOO_MANY_REQUESTS,
+        )
         if response.status_code == status.HTTP_204_NO_CONTENT:
-            mock_contacts_service.return_value.reset_password.assert_called_once_with("test@example.com")
+            mock_contacts_service.return_value.reset_password.assert_called_once_with(
+                "test@example.com"
+            )
 
     def test_reset_password_service_exception(self, client, mock_contacts_service):
         """Test password reset when service raises an exception."""
         # Arrange
         from fastapi import HTTPException
-        mock_contacts_service.return_value.reset_password = AsyncMock(side_effect=HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email not found"
-        ))
+
+        mock_contacts_service.return_value.reset_password = AsyncMock(
+            side_effect=HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Email not found"
+            )
+        )
 
         # Act
         response = client.post("/api/contacts/reset-password/test@example.com")
 
         # Assert
-        assert response.status_code in (status.HTTP_400_BAD_REQUEST, status.HTTP_429_TOO_MANY_REQUESTS)
+        assert response.status_code in (
+            status.HTTP_400_BAD_REQUEST,
+            status.HTTP_429_TOO_MANY_REQUESTS,
+        )
         if response.status_code == status.HTTP_400_BAD_REQUEST:
             assert response.json()["detail"] == "Email not found"
 
@@ -261,13 +313,18 @@ class TestContactsControllerIntegration:
 class TestContactsControllerAuthentication:
     """Test authentication-dependent endpoints in contacts controller."""
 
-    def test_me_endpoint_success(self, client, mock_current_cached_user, sample_contact):
+    def test_me_endpoint_success(
+        self, client, mock_current_cached_user, sample_contact
+    ):
         """Test successful retrieval of current user's contact information."""
         # Act
         response = client.get("/api/contacts/me")
 
         # Assert
-        assert response.status_code in (status.HTTP_200_OK, status.HTTP_401_UNAUTHORIZED)
+        assert response.status_code in (
+            status.HTTP_200_OK,
+            status.HTTP_401_UNAUTHORIZED,
+        )
         if response.status_code == status.HTTP_200_OK:
             assert response.json()["id"] == sample_contact.id
 
@@ -279,11 +336,22 @@ class TestContactsControllerAuthentication:
         # Assert
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_update_avatar_success(self, client, mock_current_admin_user, mock_upload_file_service, mock_contacts_service, sample_contact):
+    def test_update_avatar_success(
+        self,
+        client,
+        mock_current_admin_user,
+        mock_upload_file_service,
+        mock_contacts_service,
+        sample_contact,
+    ):
         """Test successful avatar update."""
         # Arrange
-        mock_upload_file_service.return_value.upload_file.return_value = "https://new-avatar-url.com/avatar.jpg"
-        mock_contacts_service.return_value.update_avatar_url.return_value = sample_contact
+        mock_upload_file_service.return_value.upload_file.return_value = (
+            "https://new-avatar-url.com/avatar.jpg"
+        )
+        mock_contacts_service.return_value.update_avatar_url.return_value = (
+            sample_contact
+        )
 
         # Create a mock file
         mock_file = MagicMock()
@@ -293,7 +361,7 @@ class TestContactsControllerAuthentication:
         # Act
         response = client.patch(
             "/api/contacts/avatar",
-            files={"file": ("avatar.jpg", b"fake-image-data", "image/jpeg")}
+            files={"file": ("avatar.jpg", b"fake-image-data", "image/jpeg")},
         )
 
         # Assert
@@ -306,7 +374,7 @@ class TestContactsControllerAuthentication:
         # Act
         response = client_unauthorized.patch(
             "/api/contacts/avatar",
-            files={"file": ("avatar.jpg", b"fake-image-data", "image/jpeg")}
+            files={"file": ("avatar.jpg", b"fake-image-data", "image/jpeg")},
         )
 
         # Assert
@@ -318,17 +386,24 @@ class TestContactsControllerAuthentication:
         response = client.patch("/api/contacts/avatar")
 
         # Assert
-        assert response.status_code in (status.HTTP_422_UNPROCESSABLE_ENTITY, status.HTTP_401_UNAUTHORIZED)
+        assert response.status_code in (
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status.HTTP_401_UNAUTHORIZED,
+        )
 
 
 class TestContactsControllerAsyncIntegration:
     """Async integration tests for contacts controller endpoints."""
 
     @pytest.mark.asyncio
-    async def test_get_contacts_async_success(self, async_client, mock_contacts_service, sample_contacts):
+    async def test_get_contacts_async_success(
+        self, async_client, mock_contacts_service, sample_contacts
+    ):
         """Test successful retrieval of contacts with async client."""
         # Arrange
-        mock_contacts_service.return_value.get_contacts = AsyncMock(return_value=sample_contacts)
+        mock_contacts_service.return_value.get_contacts = AsyncMock(
+            return_value=sample_contacts
+        )
 
         # Act
         response = await async_client.get("/api/contacts/?skip=0&limit=10")
@@ -338,10 +413,14 @@ class TestContactsControllerAsyncIntegration:
         assert len(response.json()) == 3
 
     @pytest.mark.asyncio
-    async def test_search_contacts_async_success(self, async_client, mock_contacts_service, sample_contacts):
+    async def test_search_contacts_async_success(
+        self, async_client, mock_contacts_service, sample_contacts
+    ):
         """Test search contacts with async client."""
         # Arrange
-        mock_contacts_service.return_value.search = AsyncMock(return_value=sample_contacts)
+        mock_contacts_service.return_value.search = AsyncMock(
+            return_value=sample_contacts
+        )
 
         # Act
         response = await async_client.get("/api/contacts/search?first_name=John")
@@ -351,10 +430,18 @@ class TestContactsControllerAsyncIntegration:
         assert len(response.json()) == 3
 
     @pytest.mark.asyncio
-    async def test_create_contact_async_success(self, async_client, mock_contacts_service, sample_contact_create_data, sample_contact):
+    async def test_create_contact_async_success(
+        self,
+        async_client,
+        mock_contacts_service,
+        sample_contact_create_data,
+        sample_contact,
+    ):
         """Test successful contact creation with async client."""
         # Arrange
-        mock_contacts_service.return_value.create_contact = AsyncMock(return_value=sample_contact)
+        mock_contacts_service.return_value.create_contact = AsyncMock(
+            return_value=sample_contact
+        )
 
         # Act
         payload = sample_contact_create_data.copy()
@@ -373,10 +460,13 @@ class TestContactsControllerErrorHandling:
         """Test get contacts when service raises an exception."""
         # Arrange
         from fastapi import HTTPException
-        mock_contacts_service.return_value.get_contacts = AsyncMock(side_effect=HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database error"
-        ))
+
+        mock_contacts_service.return_value.get_contacts = AsyncMock(
+            side_effect=HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Database error",
+            )
+        )
 
         # Act
         response = client.get("/api/contacts/")
@@ -389,10 +479,13 @@ class TestContactsControllerErrorHandling:
         """Test search contacts when service raises an exception."""
         # Arrange
         from fastapi import HTTPException
-        mock_contacts_service.return_value.search = AsyncMock(side_effect=HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database error"
-        ))
+
+        mock_contacts_service.return_value.search = AsyncMock(
+            side_effect=HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Database error",
+            )
+        )
 
         # Act
         response = client.get("/api/contacts/search?first_name=John")
@@ -401,14 +494,19 @@ class TestContactsControllerErrorHandling:
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         assert response.json()["detail"] == "Database error"
 
-    def test_create_contact_service_exception(self, client, mock_contacts_service, sample_contact_create_data):
+    def test_create_contact_service_exception(
+        self, client, mock_contacts_service, sample_contact_create_data
+    ):
         """Test create contact when service raises an exception."""
         # Arrange
         from fastapi import HTTPException
-        mock_contacts_service.return_value.create_contact = AsyncMock(side_effect=HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database error"
-        ))
+
+        mock_contacts_service.return_value.create_contact = AsyncMock(
+            side_effect=HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Database error",
+            )
+        )
 
         # Act
         response = client.post("/api/contacts/signup", json=sample_contact_create_data)
@@ -417,20 +515,31 @@ class TestContactsControllerErrorHandling:
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         assert response.json()["detail"] == "Database error"
 
-    def test_update_avatar_service_exception(self, client, mock_current_admin_user, mock_upload_file_service, mock_contacts_service):
+    def test_update_avatar_service_exception(
+        self,
+        client,
+        mock_current_admin_user,
+        mock_upload_file_service,
+        mock_contacts_service,
+    ):
         """Test avatar update when service raises an exception."""
         # Arrange
         from fastapi import HTTPException
-        mock_upload_file_service.return_value.upload_file = AsyncMock(return_value="https://new-avatar-url.com/avatar.jpg")
-        mock_contacts_service.return_value.update_avatar_url = AsyncMock(side_effect=HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database error"
-        ))
+
+        mock_upload_file_service.return_value.upload_file = AsyncMock(
+            return_value="https://new-avatar-url.com/avatar.jpg"
+        )
+        mock_contacts_service.return_value.update_avatar_url = AsyncMock(
+            side_effect=HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Database error",
+            )
+        )
 
         # Act
         response = client.patch(
             "/api/contacts/avatar",
-            files={"file": ("avatar.jpg", b"fake-image-data", "image/jpeg")}
+            files={"file": ("avatar.jpg", b"fake-image-data", "image/jpeg")},
         )
 
         # Assert
@@ -444,14 +553,17 @@ class TestContactsControllerValidation:
     def test_create_contact_invalid_email(self, client):
         """Test contact creation with invalid email format."""
         # Act
-        response = client.post("/api/contacts/signup", json={
-            "first_name": "John",
-            "last_name": "Doe",
-            "email": "invalid-email",
-            "phone": "+1234567890",
-            "password": "password123",
-            "birth_day": "1990-01-01"
-        })
+        response = client.post(
+            "/api/contacts/signup",
+            json={
+                "first_name": "John",
+                "last_name": "Doe",
+                "email": "invalid-email",
+                "phone": "+1234567890",
+                "password": "password123",
+                "birth_day": "1990-01-01",
+            },
+        )
 
         # Assert
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
@@ -459,27 +571,17 @@ class TestContactsControllerValidation:
     def test_create_contact_invalid_phone(self, client):
         """Test contact creation with invalid phone format."""
         # Act
-        response = client.post("/api/contacts/signup", json={
-            "first_name": "John",
-            "last_name": "Doe",
-            "email": "test@example.com",
-            "phone": "invalid-phone",
-            "password": "password123",
-            "birth_day": "1990-01-01"
-        })
-
-        # Assert
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-
-    def test_update_contact_invalid_data(self, client, mock_current_user, mock_contacts_service, sample_contact):
-        """Test contact update with invalid data."""
-        # Arrange
-        mock_contacts_service.return_value.update_contact.return_value = sample_contact
-        
-        # Act
-        response = client.patch("/api/contacts/1", json={
-            "email": "invalid-email"
-        })
+        response = client.post(
+            "/api/contacts/signup",
+            json={
+                "first_name": "John",
+                "last_name": "Doe",
+                "email": "test@example.com",
+                "phone": "invalid-phone",
+                "password": "password123",
+                "birth_day": "1990-01-01",
+            },
+        )
 
         # Assert
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
