@@ -111,7 +111,7 @@ async def create_contact(body: ContactCreateModel, db: AsyncSession = Depends(ge
     return await contacts_service.create_contact(body)
 
 
-@router.get("/me", response_model=ContactModel)
+@router.get("/me", response_model=ContactResponseModel)
 @limiter.limit("10/minute")
 async def me(
     request: Request, contact: ContactModel = Depends(get_current_cached_user)
@@ -124,7 +124,7 @@ async def me(
         contact (ContactModel): Current authenticated user
         
     Returns:
-        ContactModel: Current user's contact information
+        ContactResponseModel: Current user's contact information
     """
     return contact
 
