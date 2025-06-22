@@ -1,4 +1,4 @@
-# goit-pythonweb-hw-10
+# goit-pythonweb-hw-12
 
 A simple FastAPI application intended to demonstrate:
 - Building a web API using FastAPI  
